@@ -1,6 +1,5 @@
 # Software-FJ
 
-
 # Estas librerías permiten validar los datos y guardar los errores.
 import logging
 import re

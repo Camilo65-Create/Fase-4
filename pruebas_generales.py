@@ -1,17 +1,17 @@
 from servicios import ReservaSala, AlquilerEquipo, Asesoria
-from Excepciones import ErrorEstado
+from Excepciones import ErrorEstado, ErrorProceso
 from Clientes import Cliente
 from Reservas import Reserva
 
-# sala1 = ReservaSala(
-#     "Reserva de salas",
-#     "Alquiler de salas para reuniones",
-#     50000,
-#     20
-# )
+sala1 = ReservaSala(
+    "Reserva de salas",
+    "Alquiler de salas para reuniones",
+    50000,
+    20
+)
 
-# print(sala1.describir())
-# print("Costo:", sala1.calcular_costo(3))
+print(sala1.describir())
+print("Costo:", sala1.calcular_costo(3))
 
 # Crear un cliente
 cliente1 = Cliente(
@@ -65,3 +65,63 @@ try:
 
 except ErrorEstado as error:
     print("Error controlado:", error)
+
+# Crear servicio de alquiler de equipo
+equipo1 = AlquilerEquipo(
+    "Alquiler de equipos",
+    "Alquiler de computadores",
+    30000,
+    "Computador",
+    5
+)
+
+print("\nPrueba de alquiler de equipo:")
+print(equipo1.describir())
+print("Costo por 3 horas:", equipo1.calcular_costo(3))
+
+# Crear servicio de asesoría
+asesoria1 = Asesoria(
+    "Asesoría empresarial",
+    "Consultoría para empresas",
+    80000,
+    "Administración",
+    "Juan Pérez"
+)
+
+print("\nPrueba de asesoría:")
+print(asesoria1.describir())
+print("Costo por 3 horas:", asesoria1.calcular_costo(3))
+
+# Prueba de validación de alquiler de equipos
+try:
+    equipo_invalido = AlquilerEquipo(
+        "Alquiler de equipos",
+        "Alquiler de computadores",
+        30000,
+        "Computador",
+        0
+    )
+
+    equipo_invalido.validar_parametros()
+
+except ValueError as error:
+    print("\nError controlado:", error)
+
+try:
+    sala_invalida = ReservaSala(
+        "Sala de reuniones",
+        "Sala para eventos",
+        -50000,
+        20
+    )
+
+    sala_invalida.validar_parametros()
+
+except ValueError as error:
+    print("\nError controlado:", error)
+
+print("\nPrueba de impuesto y descuento:")
+print(
+    "Costo con impuesto del 10% y descuento del 5%:",
+    sala1.calcular_costo(3, impuesto=10, descuento=5)
+)

@@ -22,17 +22,23 @@ class Reserva:
         self.estado = "Pendiente"
 
     def calcular_costo(self):
-            return self.servicio.calcular_costo(self.duracion)
+        return self.servicio.calcular_costo(self.duracion)
 
     def confirmar(self):
         if self.estado != "Pendiente":
+            registro.error(
+                "Intento de confirmar una reserva que no está pendiente."
+            )
             raise ErrorEstado("Solo se pueden confirmar reservas pendientes.")
 
         self.estado = "Confirmada"
-        registro.info(f"Reserva confirmada para el cliente {self.cliente.id}")        
+        registro.info(f"Reserva confirmada para el cliente {self.cliente.id}")      
 
     def cancelar(self):
         if self.estado not in ("Pendiente", "Confirmada"):
+            registro.error(
+                "Intento de cancelar una reserva que no puede cancelarse."
+            )
             raise ErrorEstado("No se puede cancelar esta reserva.")
 
         self.estado = "Cancelada"
@@ -40,6 +46,7 @@ class Reserva:
 
     def procesar(self):
         if self.estado != "Confirmada":
+            registro.error("Intento de procesar una reserva que no está confirmada.")
             raise ErrorEstado("Solo se pueden procesar reservas confirmadas.")
 
         try:

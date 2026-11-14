@@ -4,7 +4,7 @@
 import re
 from abc import ABC, abstractmethod
 from uuid import uuid4
-from excepciones import ErrorDatos
+from Excepciones import ErrorDatos
 
 # Todos los registros tienen un identificador y una descripción.
 class Entidad(ABC):

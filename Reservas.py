@@ -21,7 +21,7 @@ class Reserva:
         self.duracion = duracion
         self.estado = "Pendiente"
 
-        def calcular_costo(self):
+    def calcular_costo(self):
             return self.servicio.calcular_costo(self.duracion)
 
     def confirmar(self):

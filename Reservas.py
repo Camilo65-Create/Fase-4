@@ -44,6 +44,14 @@ class Reserva:
 
         try:
             costo = self.calcular_costo()
+
+        except Exception as error:
+            registro.exception("Error al procesar la reserva.")
+            raise ErrorProceso(
+                "No se pudo completar el procesamiento de la reserva."
+            ) from error
+
+        else:
             self.estado = "Procesada"
 
             registro.info(
@@ -53,9 +61,11 @@ class Reserva:
 
             return costo
 
-        except Exception as error:
-            registro.exception("Error al procesar la reserva.")
-            raise ErrorProceso("No se pudo completar el procesamiento de la reserva.") from error
+        finally:
+            registro.info(
+                f"Finalizó el intento de procesamiento de la reserva "
+                f"del cliente {self.cliente.id}."
+            )
 
     def describir(self):
         return (

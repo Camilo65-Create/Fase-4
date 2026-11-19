@@ -125,3 +125,30 @@ print(
     "Costo con impuesto del 10% y descuento del 5%:",
     sala1.calcular_costo(3, impuesto=10, descuento=5)
 )
+
+from Sistema import Sistema
+
+print("\n--- PRUEBA DE INTEGRACIÓN DEL SISTEMA ---")
+
+sistema = Sistema()
+
+sistema.registrar_cliente(cliente1)
+sistema.registrar_servicio(sala1)
+
+reserva_sistema = sistema.crear_reserva(
+    cliente1, sala1, 2
+)
+
+print("\nClientes registrados:")
+sistema.mostrar_clientes()
+
+print("\nServicios registrados:")
+sistema.mostrar_servicios()
+
+print("\nReservas registradas:")
+sistema.mostrar_reservas()
+
+print("\nBúsqueda de reserva:")
+print(sistema.buscar_reserva(1).describir())
+
+print("\n--- FIN DE LA PRUEBA DE INTEGRACIÓN ---")

@@ -37,8 +37,14 @@ class Cliente(Entidad):
             raise ErrorDatos("Documento: debe tener entre 5 y 15 dígitos.")
         if not any(letra.isalpha() for letra in nombre) or not all(letra.isalpha() or letra in " '-" for letra in nombre):
             raise ErrorDatos("Nombre: solo se permiten letras, espacios, apóstrofes y guiones.")
-        if len(correo) > 120 or not re.fullmatch(r"[^@\s]+@[^@\s.]+(?:\.[^@\s.]+)+", correo):
-            raise ErrorDatos("El correo no es válido.")
+        if len(correo) > 120:
+            raise ErrorDatos("El correo no puede superar los 120 caracteres.")
+
+        if not re.fullmatch(r"[^@\s]+@[^@\s.]+(?:\.[^@\s.]+)+", correo):
+            raise ErrorDatos(
+                "Correo inválido. Debe tener un formato como usuario@gmail.com, "
+                "con un nombre, @, dominio y extensión."
+            )
         if not re.fullmatch(r"\+?[0-9]{7,15}", telefono):
             raise ErrorDatos("Teléfono: debe tener entre 7 y 15 dígitos.")
         self.__documento, self.__nombre = documento, nombre

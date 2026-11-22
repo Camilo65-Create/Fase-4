@@ -31,15 +31,25 @@ class Sistema:
         # Registra la operación realizada.
         registro.info(f"Cliente registrado: {cliente.nombre}")
 
-    def registrar_servicio(self, servicio):
-        """Agrega un servicio a la lista de servicios disponibles."""
+        def registrar_servicio(self, servicio):
+        """Valida un servicio antes de incorporarlo al sistema."""
+        try:
+            # Comprueba que el objeto pertenezca a la clase Servicio.
+            if not isinstance(servicio, Servicio):
+                raise ErrorDatos("El servicio no es válido.")
 
-        # Comprueba que el objeto recibido sea un servicio válido.
-        if not isinstance(servicio, Servicio):
-            raise ErrorDatos("El servicio no es válido.")
+            # Rechaza servicios con tarifas, capacidades o cantidades inválidas.
+            servicio.validar_parametros()
 
-        self.servicios.append(servicio)
-        registro.info(f"Servicio registrado: {servicio.nombre}")
+        except (ErrorDatos, ValueError, TypeError):
+            # Registra el error y lo comunica al código que llamó al método.
+            registro.exception("No se pudo registrar el servicio.")
+            raise
+
+        else:
+            # Solo incorpora el servicio cuando todas las validaciones pasan.
+            self.servicios.append(servicio)
+            registro.info(f"Servicio registrado: {servicio.nombre}")
 
     def crear_reserva(self, cliente, servicio, duracion):
         """Crea una reserva utilizando un cliente y un servicio registrados."""

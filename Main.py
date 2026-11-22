@@ -1,4 +1,5 @@
 # Importaciones necesarias
+from Logs import registro
 from Sistema import Sistema
 from Clientes import Cliente
 from servicios import ReservaSala, AlquilerEquipo, Asesoria
@@ -122,6 +123,9 @@ def ejecutar():
                     print(f"{i}. {cliente.describir()}")
 
                 numero_cliente = int(input("Seleccione el cliente: "))
+                # Valida la selección antes de acceder a la lista.
+                if not 1 <= numero_cliente <= len(sistema.clientes):
+                    raise ValueError("Seleccione un número de cliente válido.")
                 cliente = sistema.clientes[numero_cliente - 1]
 
                 # Muestra los servicios disponibles para seleccionar uno.
@@ -130,6 +134,9 @@ def ejecutar():
                     print(f"{i}. {servicio.describir()}")
 
                 numero_servicio = int(input("Seleccione el servicio: "))
+                # Rechaza posiciones inexistentes, cero y números negativos.
+                if not 1 <= numero_servicio <= len(sistema.servicios):
+                    raise ValueError("Seleccione un número de servicio válido.")
                 servicio = sistema.servicios[numero_servicio - 1]
 
                 # Solicita la duración de la reserva.
@@ -181,8 +188,11 @@ def ejecutar():
                 print("Opcion no valida. Intente nuevamente.")
 
         # Controla errores propios del sistema y errores de entrada.
-        except (ErrorFJ, ValueError, IndexError) as error:
-            print("No se pudo completar la operacion:", error)
+        except (ErrorFJ, ValueError, IndexError, TypeError) as error:
+            # Guarda el error y su detalle técnico en el archivo de logs.
+            registro.exception("Error durante una operación del menú.")
+            # Informa al usuario sin cerrar la aplicación.
+            print("No se pudo completar la operación:", error)
 
 
 # Ejecuta el programa únicamente cuando este archivo se inicia directamente.

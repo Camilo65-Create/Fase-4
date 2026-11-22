@@ -31,7 +31,7 @@ class Sistema:
         # Registra la operación realizada.
         registro.info(f"Cliente registrado: {cliente.nombre}")
 
-        def registrar_servicio(self, servicio):
+    def registrar_servicio(self, servicio):
         """Valida un servicio antes de incorporarlo al sistema."""
         try:
             # Comprueba que el objeto pertenezca a la clase Servicio.

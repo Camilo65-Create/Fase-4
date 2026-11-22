@@ -1,4 +1,5 @@
 # Importaciones necesarias
+from math import isfinite
 from Clientes import Cliente
 from servicios import Servicio
 from Excepciones import ErrorDatos, ErrorEstado, ErrorProceso
@@ -19,9 +20,16 @@ class Reserva:
         if not isinstance(servicio, Servicio):
             raise ErrorDatos("El servicio proporcionado no es válido.")
 
-        # Verifica que la duración sea un número positivo.
-        if not isinstance(duracion, (int, float)) or isinstance(duracion, bool) or duracion <= 0:
-            raise ErrorDatos("La duración debe ser un número mayor que cero.")
+        # La duración debe ser numérica, finita y estrictamente positiva.
+        if (
+            isinstance(duracion, bool)
+            or not isinstance(duracion, (int, float))
+            or not isfinite(duracion)
+            or duracion <= 0
+        ):
+            raise ErrorDatos(
+                "La duración debe ser un número finito mayor que cero."
+            )
 
         # Almacena los datos de la reserva y establece su estado inicial.
         self.cliente = cliente
@@ -72,6 +80,16 @@ class Reserva:
         try:
             # Calcula el costo de la reserva.
             costo = self.calcular_costo()
+             # Evita procesar una reserva con un resultado inconsistente.
+            if (
+                isinstance(costo, bool)
+                or not isinstance(costo, (int, float))
+                or not isfinite(costo)
+                or costo < 0
+            ):
+                raise ErrorDatos(
+                    "El costo calculado debe ser finito y no negativo."
+                )
 
         except Exception as error:
             # Registra el error y genera una excepción propia del sistema.

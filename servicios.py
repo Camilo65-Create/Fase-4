@@ -1,69 +1,89 @@
-# Importaciones necesarias
+# Herramientas para definir métodos abstractos y validar números.
 from abc import abstractmethod
+from math import isfinite
+
+# Importa la entidad general y la validación de textos.
 from Clientes import Entidad, validar_texto
 
 
-# Clase abstracta que representa los servicios de Software FJ.
-# Hereda de Entidad y establece los métodos que deben implementar
-# las clases de servicios especializados.
+def es_numero_valido(valor):
+    """Acepta números finitos y rechaza booleanos."""
+    return (
+        isinstance(valor, (int, float))
+        and not isinstance(valor, bool)
+        and isfinite(valor)
+    )
+
+
+# Clase abstracta de la que heredan los servicios especializados.
 class Servicio(Entidad):
 
     def __init__(self, nombre, descripcion, tarifa):
-        """Inicializa los datos generales de un servicio."""
+        """Guarda los datos generales del servicio."""
         super().__init__()
 
-        # Valida y almacena la información básica del servicio.
-        self.nombre = validar_texto(nombre, "Nombre de serivicio")
+        self.nombre = validar_texto(nombre, "Nombre del servicio")
         self.descripcion = validar_texto(descripcion, "Descripción")
         self.tarifa = tarifa
 
     @abstractmethod
     def calcular_costo(self, horas, impuesto=0, descuento=0):
-        """Calcula el costo del servicio según su duración."""
+        """Cada servicio debe implementar su cálculo."""
         pass
 
     @abstractmethod
     def validar_parametros(self):
-        """Verifica que los datos del servicio sean válidos."""
+        """Cada servicio debe validar sus datos."""
         pass
 
+    def validar_tarifa(self):
+        """Comprueba que la tarifa sea un número positivo."""
+        if not es_numero_valido(self.tarifa) or self.tarifa <= 0:
+            raise ValueError("La tarifa debe ser un número positivo.")
 
-# Servicio especializado para el alquiler de salas.
+    def validar_calculo(self, horas, impuesto, descuento):
+        """Revisa los datos utilizados para calcular un costo."""
+        if not es_numero_valido(horas) or horas <= 0:
+            raise ValueError("Las horas deben ser un número positivo.")
+
+        if not es_numero_valido(impuesto) or not 0 <= impuesto <= 100:
+            raise ValueError("El impuesto debe estar entre 0 y 100.")
+
+        if not es_numero_valido(descuento) or not 0 <= descuento <= 100:
+            raise ValueError("El descuento debe estar entre 0 y 100.")
+
+
+# Servicio especializado para reservar salas.
 class ReservaSala(Servicio):
 
     def __init__(self, nombre, descripcion, tarifa, capacidad):
-        """Inicializa una sala con su información y capacidad."""
+        """Crea una sala y comprueba que sus datos sean válidos."""
         super().__init__(nombre, descripcion, tarifa)
+
         self.capacidad = capacidad
-
-    def describir(self):
-        """Devuelve una descripción de la sala y su capacidad."""
-        return f"{self.nombre}: {self.descripcion}. Capacidad: {self.capacidad} personas."
-
-    def validar_parametros(self):
-        """Comprueba que la tarifa y la capacidad sean válidas."""
-
-        # La tarifa debe ser un número positivo.
-        if not isinstance(self.tarifa, (int, float)) or self.tarifa <= 0:
-            raise ValueError("La tarifa debe ser un número mayor que cero.")
-
-        # La capacidad debe ser un entero positivo.
-        if not isinstance(self.capacidad, int) or self.capacidad <= 0:
-            raise ValueError("La capacidad debe ser un entero positivo.")
-
-    def calcular_costo(self, horas, impuesto=0, descuento=0):
-        """Calcula el costo de alquiler de la sala."""
-
         self.validar_parametros()
 
-        if horas <= 0:
-            raise ValueError("Las horas deben ser mayores que cero.")
+    def validar_parametros(self):
+        """Valida la tarifa y la capacidad de la sala."""
+        self.validar_tarifa()
 
-        # Verifica que el impuesto y el descuento sean porcentajes válidos.
-        if not 0 <= impuesto <= 100 or not 0 <= descuento <= 100:
-            raise ValueError("El impuesto y el descuento deben estar entre 0 y 100.")
+        # Exige un entero positivo y rechaza booleanos.
+        if type(self.capacidad) is not int or self.capacidad <= 0:
+            raise ValueError("La capacidad debe ser un entero positivo.")
 
-        # Calcula el subtotal, aplica el descuento y después el impuesto.
+    def describir(self):
+        """Devuelve la descripción de la sala."""
+        return (
+            f"{self.nombre}: {self.descripcion}. "
+            f"Capacidad: {self.capacidad} personas."
+        )
+
+    def calcular_costo(self, horas, impuesto=0, descuento=0):
+        """Calcula el costo de la sala con porcentajes opcionales."""
+        self.validar_parametros()
+        self.validar_calculo(horas, impuesto, descuento)
+
+        # Aplica primero el descuento y después el impuesto.
         subtotal = self.tarifa * horas
         subtotal -= subtotal * (descuento / 100)
         total = subtotal + subtotal * (impuesto / 100)
@@ -71,45 +91,39 @@ class ReservaSala(Servicio):
         return total
 
 
-# Servicio especializado para el alquiler de equipos.
+# Servicio especializado para alquilar equipos.
 class AlquilerEquipo(Servicio):
 
     def __init__(self, nombre, descripcion, tarifa, equipo, cantidad):
-        """Inicializa el servicio con el tipo y cantidad de equipos."""
+        """Crea un servicio de equipos y valida sus datos."""
         super().__init__(nombre, descripcion, tarifa)
 
         self.equipo = validar_texto(equipo, "Nombre del equipo")
         self.cantidad = cantidad
+        self.validar_parametros()
 
     def validar_parametros(self):
-        """Comprueba que la tarifa y la cantidad de equipos sean válidas."""
+        """Valida la tarifa y la cantidad de equipos."""
+        self.validar_tarifa()
 
-        if not isinstance(self.tarifa, (int, float)) or self.tarifa <= 0:
-            raise ValueError("La tarifa debe ser un número mayor que cero.")
-
-        if not isinstance(self.cantidad, int) or self.cantidad <= 0:
+        # Solo acepta cantidades enteras positivas.
+        if type(self.cantidad) is not int or self.cantidad <= 0:
             raise ValueError("La cantidad debe ser un entero positivo.")
 
     def describir(self):
-        """Devuelve la información del equipo y su cantidad disponible."""
+        """Devuelve la información de los equipos."""
         return (
             f"{self.nombre}: {self.descripcion}. "
-            f"Equipo: {self.equipo}. Cantidad disponible: {self.cantidad}."
+            f"Equipo: {self.equipo}. "
+            f"Cantidad disponible: {self.cantidad}."
         )
 
     def calcular_costo(self, horas, impuesto=0, descuento=0):
-        """Calcula el costo del alquiler de equipos según las horas."""
-
+        """Calcula el alquiler según las horas contratadas."""
         self.validar_parametros()
+        self.validar_calculo(horas, impuesto, descuento)
 
-        if not isinstance(horas, (int, float)) or horas <= 0:
-            raise ValueError("Las horas deben ser mayores que cero.")
-
-        # Comprueba que los porcentajes estén dentro del rango permitido.
-        if not 0 <= impuesto <= 100 or not 0 <= descuento <= 100:
-            raise ValueError("El impuesto y el descuento deben estar entre 0 y 100.")
-
-        # Aplica primero el descuento y luego el impuesto al subtotal.
+        # Conserva la fórmula original de tarifa por hora.
         subtotal = self.tarifa * horas
         subtotal -= subtotal * (descuento / 100)
         total = subtotal + subtotal * (impuesto / 100)
@@ -117,42 +131,35 @@ class AlquilerEquipo(Servicio):
         return total
 
 
-# Servicio especializado que ofrece asesorías profesionales.
+# Servicio especializado para ofrecer asesorías.
 class Asesoria(Servicio):
 
     def __init__(self, nombre, descripcion, tarifa, especialidad, asesor):
-        """Inicializa la asesoría con su especialidad y responsable."""
+        """Crea una asesoría y comprueba sus datos."""
         super().__init__(nombre, descripcion, tarifa)
 
         self.especialidad = validar_texto(especialidad, "Especialidad")
         self.asesor = validar_texto(asesor, "Nombre del asesor")
+        self.validar_parametros()
 
     def validar_parametros(self):
         """Comprueba que la tarifa de la asesoría sea válida."""
-
-        if not isinstance(self.tarifa, (int, float)) or self.tarifa <= 0:
-            raise ValueError("La tarifa debe ser un número mayor que cero.")
+        self.validar_tarifa()
 
     def describir(self):
-        """Devuelve la información de la asesoría y del asesor."""
+        """Devuelve la especialidad y el asesor responsable."""
         return (
             f"{self.nombre}: {self.descripcion}. "
-            f"Especialidad: {self.especialidad}. Asesor: {self.asesor}."
+            f"Especialidad: {self.especialidad}. "
+            f"Asesor: {self.asesor}."
         )
 
     def calcular_costo(self, horas, impuesto=0, descuento=0):
-        """Calcula el costo de la asesoría según su duración."""
-
+        """Calcula el costo de la asesoría."""
         self.validar_parametros()
+        self.validar_calculo(horas, impuesto, descuento)
 
-        if not isinstance(horas, (int, float)) or horas <= 0:
-            raise ValueError("Las horas deben ser mayores que cero.")
-
-        # Verifica que los porcentajes del impuesto y descuento sean válidos.
-        if not 0 <= impuesto <= 100 or not 0 <= descuento <= 100:
-            raise ValueError("El impuesto y el descuento deben estar entre 0 y 100.")
-
-        # Calcula el valor final aplicando descuento e impuesto.
+        # Aplica descuento e impuesto al valor de las horas.
         subtotal = self.tarifa * horas
         subtotal -= subtotal * (descuento / 100)
         total = subtotal + subtotal * (impuesto / 100)

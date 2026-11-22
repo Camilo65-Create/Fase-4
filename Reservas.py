@@ -3,7 +3,7 @@ from math import isfinite
 from Clientes import Cliente
 from servicios import Servicio
 from Excepciones import ErrorDatos, ErrorEstado, ErrorProceso
-from Logs import registro
+from Logs import registro, formatear_pesos
 
 
 # Clase que representa una reserva realizada por un cliente.
@@ -67,7 +67,12 @@ class Reserva:
 
         # Actualiza el estado y registra la cancelación.
         self.estado = "Cancelada"
-        registro.info(f"Reserva cancelada para el cliente {self.cliente.id}")
+                    registro.info(
+                "Reserva procesada para el cliente %s. "
+                "Costo total: %s",
+                self.cliente.nombre,
+                formatear_pesos(costo)
+            )
 
     def procesar(self):
         """Procesa una reserva confirmada y devuelve el costo final."""

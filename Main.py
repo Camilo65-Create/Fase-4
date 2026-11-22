@@ -174,7 +174,7 @@ def ejecutar():
             elif opcion == "8":
                 reserva = seleccionar_reserva(sistema)
 
-                 if reserva:
+                if reserva:
                     costo = reserva.procesar()
                     print(
                         "Reserva procesada. Costo total: "

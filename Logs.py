@@ -1,14 +1,15 @@
-# Herramientas para registrar eventos y manejar carpetas.
+# Herramientas para registrar eventos y administrar carpetas.
 import logging
 from pathlib import Path
 
 
 class FormatoEventos(logging.Formatter):
-    """Presenta cada evento en un bloque organizado."""
+    """Organiza la información recibida en bloques legibles."""
 
     def format(self, evento):
-        # Presenta la fecha sin milisegundos.
-        fecha = self.formatTime(evento, "%d/%m/%Y %H:%M:%S")
+        # Obtiene la fecha y hora del evento.
+        fecha = self.formatTime(evento, "%d/%m/%Y")
+        hora = self.formatTime(evento, "%H:%M:%S")
 
         # Traduce los niveles del registro.
         niveles = {
@@ -21,81 +22,143 @@ class FormatoEventos(logging.Formatter):
 
         nivel = niveles.get(evento.levelname, evento.levelname)
 
-        # Construye el encabezado y el mensaje del evento.
+        # Conserva el mensaje completo, incluso si tiene varias líneas.
+        mensaje = evento.getMessage()
+
+        # Construye el encabezado del registro.
         lineas = [
-            "=" * 75,
-            f"FECHA   : {fecha}",
-            f"NIVEL   : {nivel}",
-            f"ORIGEN  : {evento.filename} / {evento.funcName}",
-            "-" * 75,
-            f"EVENTO  : {evento.getMessage()}"
+            "=" * 78,
+            "                         SOFTWARE FJ",
+            "                    REGISTRO DE ACTIVIDADES",
+            "=" * 78,
+            f"FECHA          : {fecha}",
+            f"HORA           : {hora}",
+            f"NIVEL          : {nivel}",
+            f"ARCHIVO ORIGEN : {evento.filename}",
+            f"FUNCIÓN        : {evento.funcName}",
+            f"LÍNEA          : {evento.lineno}",
+            "-" * 78,
+            "DESCRIPCIÓN DEL EVENTO",
+            "-" * 78,
+            mensaje
         ]
 
-        # Agrega la excepción y su traza cuando están disponibles.
+        # Agrega los detalles de la excepción cuando se adjuntaron.
         if evento.exc_info:
-            tipo, error, _ = evento.exc_info
+            tipo, error, traza = evento.exc_info
 
             lineas.extend([
-                "-" * 75,
-                f"ERROR   : {tipo.__name__}",
-                f"MOTIVO  : {error}",
-                "DETALLE TÉCNICO:"
+                "",
+                "-" * 78,
+                "INFORMACIÓN DEL ERROR",
+                "-" * 78,
+                f"TIPO DE ERROR  : {tipo.__name__}",
+                f"MOTIVO         : {error}"
             ])
 
-            # Conserva también las excepciones encadenadas.
+            # Localiza el punto donde se originó la excepción final.
+            if traza is not None:
+                origen = traza
+
+                while origen.tb_next is not None:
+                    origen = origen.tb_next
+
+                archivo_origen = Path(
+                    origen.tb_frame.f_code.co_filename
+                ).name
+
+                funcion_origen = origen.tb_frame.f_code.co_name
+
+                lineas.extend([
+                    f"ARCHIVO ERROR  : {archivo_origen}",
+                    f"FUNCIÓN ERROR  : {funcion_origen}",
+                    f"LÍNEA ERROR    : {origen.tb_lineno}"
+                ])
+
+            # Incluye la traza completa y las excepciones encadenadas.
+            lineas.extend([
+                "",
+                "-" * 78,
+                "DETALLE TÉCNICO COMPLETO",
+                "-" * 78
+            ])
+
             detalle = self.formatException(evento.exc_info)
 
             for linea in detalle.splitlines():
                 lineas.append(f"    {linea}")
 
-        lineas.append("=" * 75)
+        # Conserva información de pila adicional si fue enviada.
+        if evento.stack_info:
+            lineas.extend([
+                "",
+                "PILA ADICIONAL:",
+                evento.stack_info
+            ])
 
-        return "\n".join(lineas) + "\n"
+        # Cierra el bloque del evento.
+        lineas.extend([
+            "=" * 78,
+            ""
+        ])
+
+        return "\n".join(lineas)
 
 
-# Crea la carpeta junto a los archivos del proyecto.
+# Crea la carpeta de registros junto a los módulos del programa.
 carpeta = Path(__file__).resolve().parent / "logs"
 carpeta.mkdir(exist_ok=True)
 
-# Define los archivos de registro.
+# Conserva los dos archivos de registro.
 archivo_log = carpeta / "eventos.log"
 archivo_tecnico = carpeta / "errores_tecnicos.log"
 
-# Todos los módulos utilizan el mismo registro.
+# Conserva el nombre del registro utilizado por el proyecto.
 registro = logging.getLogger("software_fj_entrega")
 registro.setLevel(logging.INFO)
+
+# Evita enviar los mismos mensajes al registro general de Python.
 registro.propagate = False
 
-# Evita duplicar los manejadores al importar el módulo.
+# Agrega los manejadores una sola vez.
 if not registro.handlers:
 
-    # Guarda todos los eventos con presentación organizada.
+    # Guarda todos los eventos con el formato organizado.
     eventos = logging.FileHandler(
         archivo_log,
+        mode="a",
         encoding="utf-8"
     )
     eventos.setLevel(logging.INFO)
     eventos.setFormatter(FormatoEventos())
     registro.addHandler(eventos)
 
-    # Guarda una copia técnica de los errores.
+    # Guarda una copia de los errores con presentación técnica.
     errores = logging.FileHandler(
         archivo_tecnico,
+        mode="a",
         encoding="utf-8"
     )
     errores.setLevel(logging.ERROR)
-    errores.setFormatter(
-        logging.Formatter(
-            "%(asctime)s | %(levelname)s | %(message)s",
-            datefmt="%d/%m/%Y %H:%M:%S"
-        )
+
+    formato_tecnico = logging.Formatter(
+        (
+            "%(asctime)s | %(levelname)s\n"
+            "Archivo: %(filename)s | "
+            "Función: %(funcName)s | "
+            "Línea: %(lineno)d\n"
+            "Mensaje: %(message)s"
+        ),
+        datefmt="%d/%m/%Y %H:%M:%S"
     )
+
+    errores.setFormatter(formato_tecnico)
     registro.addHandler(errores)
 
 
-# Permite probar directamente la creación de registros.
+# Prueba sencilla al ejecutar este archivo directamente.
 if __name__ == "__main__":
-    registro.info("Prueba del sistema de registros.")
+    registro.info("Prueba del registro de actividades.")
 
-    print("Archivo de eventos:", archivo_log)
-    print("Archivo técnico:", archivo_tecnico)
+    print("Registro de actividades:", archivo_log)
+    print("Registro técnico:", archivo_tecnico)

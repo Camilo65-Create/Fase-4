@@ -2,6 +2,14 @@
 import logging
 from pathlib import Path
 
+def formatear_pesos(valor):
+    """Presenta un valor con signo pesos y separadores colombianos."""
+    texto = f"${valor:,.2f}"
+    return (
+        texto.replace(",", "X")
+        .replace(".", ",")
+        .replace("X", ".")
+    )
 
 class FormatoEventos(logging.Formatter):
     """Organiza la información recibida en bloques legibles."""
@@ -30,7 +38,7 @@ class FormatoEventos(logging.Formatter):
             "=" * 78,
             "                         SOFTWARE FJ",
             "                    REGISTRO DE ACTIVIDADES",
-            "=" * 78,
+            "-" * 78,
             f"FECHA          : {fecha}",
             f"HORA           : {hora}",
             f"NIVEL          : {nivel}",

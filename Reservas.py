@@ -58,7 +58,7 @@ class Reserva:
     def cancelar(self):
         """Cancela una reserva pendiente o confirmada."""
 
-        # Comprueba que la reserva pueda ser cancelada.
+        # Comprueba que la reserva pueda cancelarse.
         if self.estado not in ("Pendiente", "Confirmada"):
             registro.error(
                 "Intento de cancelar una reserva que no puede cancelarse."
@@ -67,12 +67,11 @@ class Reserva:
 
         # Actualiza el estado y registra la cancelación.
         self.estado = "Cancelada"
-                    registro.info(
-                "Reserva procesada para el cliente %s. "
-                "Costo total: %s",
-                self.cliente.nombre,
-                formatear_pesos(costo)
-            )
+
+        registro.info(
+            "Reserva cancelada para el cliente %s.",
+            self.cliente.nombre
+        )
 
     def procesar(self):
         """Procesa una reserva confirmada y devuelve el costo final."""
@@ -104,12 +103,14 @@ class Reserva:
             ) from error
 
         else:
-            # Si el cálculo es correcto, cambia el estado de la reserva.
+            # Actualiza el estado cuando el cálculo es correcto.
             self.estado = "Procesada"
 
             registro.info(
-                f"Reserva procesada para el cliente {self.cliente.id}. "
-                f"Costo total: {costo}"
+                "Reserva procesada para el cliente %s. "
+                "Costo total: %s",
+                self.cliente.nombre,
+                formatear_pesos(costo)
             )
 
             return costo

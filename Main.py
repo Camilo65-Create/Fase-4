@@ -1,5 +1,5 @@
 # Importaciones necesarias
-from Logs import registro
+from Logs import registro, formatear_pesos
 from Sistema import Sistema
 from Clientes import Cliente
 from servicios import ReservaSala, AlquilerEquipo, Asesoria
@@ -174,10 +174,12 @@ def ejecutar():
             elif opcion == "8":
                 reserva = seleccionar_reserva(sistema)
 
-                if reserva:
+                 if reserva:
                     costo = reserva.procesar()
-                    print(f"Reserva procesada. Costo total: ${costo:,.2f}")
-
+                    print(
+                        "Reserva procesada. Costo total: "
+                        f"{formatear_pesos(costo)}"
+                    )
             # Opción 0: finalizar la ejecución.
             elif opcion == "0":
                 print("Gracias por utilizar Software FJ.")
